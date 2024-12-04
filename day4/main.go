@@ -12,7 +12,7 @@ func check (e error) {
     }
 }
 
-func up(lines []string, i int, j int) bool {
+func vertical(lines []string, i int, j int) bool {
     if i < 3 {
 	return false 
     }
@@ -20,21 +20,10 @@ func up(lines []string, i int, j int) bool {
     for k := 0; k < 4; k++ {
 	word = word + string(lines[i-k][j])
     }
-    return word == "XMAS"
+    return word == "XMAS" || word == "SAMX"
 }
 
-func down(lines []string, i int, j int) bool {
-    if i >= len(lines)-4 {
-	return false 
-    }
-    word := ""
-    for k := 0; k < 4; k++ {
-	word = word + string(lines[i+k][j])
-    }
-    return word == "XMAS"
-}
-
-func left(lines []string, i int, j int) bool {
+func horizontal(lines []string, i int, j int) bool {
     if j < 3 {
 	return false 
     }
@@ -42,21 +31,10 @@ func left(lines []string, i int, j int) bool {
     for k := 0; k < 4; k++ {
 	word = word + string(lines[i][j-k])
     }
-    return word == "XMAS"
+    return word == "XMAS" || word == "SAMX"
 }
 
-func right(lines []string, i int, j int) bool {
-    if j >= len(lines[i])-3 {
-	return false 
-    }
-    word := ""
-    for k := 0; k < 4; k++ {
-	word = word + string(lines[i][j+k])
-    }
-    return word == "XMAS"
-}
-
-func up_left(lines []string, i int, j int) bool {
+func diagonal_left_to_right(lines []string, i int, j int) bool {
     if i < 3 || j < 3 {
 	return false
     }
@@ -64,10 +42,10 @@ func up_left(lines []string, i int, j int) bool {
     for k := 0; k < 4; k++ {
 	word = word + string(lines[i-k][j-k])
     }
-    return word == "XMAS"
+    return word == "XMAS" || word == "SAMX"
 }
 
-func up_right(lines []string, i int, j int) bool {
+func diagonal_right_to_left(lines []string, i int, j int) bool {
     if i < 3 || j >= len(lines[i])-3 {
 	return false
     }
@@ -75,57 +53,23 @@ func up_right(lines []string, i int, j int) bool {
     for k := 0; k < 4; k++ {
 	word = word + string(lines[i-k][j+k])
     }
-    return word == "XMAS"
-}
-
-func down_left(lines []string, i int, j int) bool {
-    if i >= len(lines)-4 || j < 3 {
-	return false
-    }
-    word := ""
-    for k := 0; k < 4; k++ {
-	word = word + string(lines[i+k][j-k])
-    }
-    return word == "XMAS"
-}
-
-func down_right(lines []string, i int, j int) bool {
-    if i >= len(lines)-4 || j >= len(lines[i])-3 {
-	return false
-    }
-    word := ""
-    for k := 0; k < 4; k++ {
-	word = word + string(lines[i+k][j+k])
-    }
-    return word == "XMAS"
+    return word == "XMAS" || word == "SAMX"
 }
 
 func part1(lines []string) int {
     count := 0
     for i, line := range lines {
 	for j := 0; j < len(line); j++ {
-	   if(up(lines, i, j)) {
+	   if(vertical(lines, i, j)) {
 		count++
 	    } 
-	   if(down(lines, i, j)) {
+	   if(horizontal(lines, i, j)) {
 		count++
 	    } 
-	   if(left(lines, i, j)) {
+	   if(diagonal_left_to_right(lines, i, j)) {
 		count++
 	    } 
-	   if(right(lines, i, j)) {
-		count++
-	    } 
-	   if(up_left(lines, i, j)) {
-		count++
-	    } 
-	   if(up_right(lines, i, j)) {
-		count++
-	    } 
-	   if(down_left(lines, i, j)) {
-		count++
-	    } 
-	   if(down_right(lines, i, j)) {
+	   if(diagonal_right_to_left(lines, i, j)) {
 		count++
 	    } 
 	}
