@@ -24,6 +24,12 @@ type Pos struct {
     Y int
 }
 
+type PosWithDir struct {
+    X int
+    Y int
+    dir int
+}
+
 func find_starting_pos(_map []string) character {
     var c1 character
     for i, row := range _map {
@@ -114,8 +120,50 @@ func part1(_map []string) int {
 }
 
 
-func part2(lines []string) int {
+func isClearModified(_map []string, x, y , x2, y2 int) bool{
+    if x == x2 && y == y2 {
+	return false
+    }
+    if string(_map[y][x]) == "#" {
+	return false
+    }  
+    return true
+}
+
+func part2(_map []string) int {
     count := 0
+    width := len(_map[0])
+    height := len(_map) - 1
+
+    for i:=0; i < height; i++ {
+	for j:=0; j < width; j++ {
+	    if !isClear(_map, j, i){ 
+		continue
+	    }
+	    guard := find_starting_pos(_map)
+	    visited := make(map[PosWithDir]bool)
+	    visited[PosWithDir{guard.x_pos, guard.y_pos, guard.orientation}] = true
+	    for ;; {
+		tempX, tempY := getNewPos(guard)
+		if tempX < 0 || tempX >= width || tempY < 0 || tempY >= height {
+		    break
+		}
+		if visited[PosWithDir{tempX, tempY, guard.orientation}] {
+		    count++
+		    break
+		}
+		if(isClearModified(_map, tempX, tempY, j, i)) {
+		    guard.x_pos = tempX
+		    guard.y_pos = tempY
+		    if(!visited[PosWithDir{tempX, tempY, guard.orientation}]) {
+			visited[PosWithDir{tempX, tempY, guard.orientation}] = true
+		    }
+		}else {
+		    guard = rotate90(guard)
+		}
+	    }
+	}
+    }
     return count
 }
 
@@ -127,9 +175,6 @@ func main() {
 
     input := string(data)
     lines := strings.Split(input, "\n")
- //    for _, line := range lines {
-	// fmt.Println(line)
- //    }
 
     fmt.Println("part 1:", part1(lines))
     fmt.Println("part 2:", part2(lines))
