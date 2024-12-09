@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"math"
 )
 
 func check (e error) {
@@ -16,23 +15,6 @@ func check (e error) {
 type Pos struct {
     X int
     Y int
-}
-
-func distance(x1, y1, x2, y2 int) float64 {
-    return math.Sqrt(math.Pow(float64(x2-x1), 2) + math.Pow(float64(y2-y1), 2))
-}
-
-func getSlope(x1, y1, x2, y2 int) float64 {
-    return float64(y2-y1)/float64(x2-x1)
-}
-
-//y = m*x + b
-func getYIntercept(x, y int, m float64) float64 {
-    return float64(y)-(m*float64(x))
-}
-
-func getY(x int, m, b float64) float64 {
-    return (m*float64(x)) + b 
 }
 
 func part1(lines []string) int {

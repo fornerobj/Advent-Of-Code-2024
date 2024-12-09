@@ -28,11 +28,10 @@ func isCorrect(adjList map[int][]int, nums []int) bool {
     return goodLine
 }
 
-func part1(lines []string) int {
+func createAdjList(lines []string) (map[int][]int, int) {
     adjList := make(map[int][]int)
-
     i := 0
-    count := 0
+
     for ; lines[i] != ""; i++ {
 	nums := strings.Split(lines[i], "|")	
 	num1, err := strconv.Atoi(nums[0])
@@ -45,6 +44,13 @@ func part1(lines []string) int {
 	}
 	adjList[num2] = append(adjList[num2], num1)
     }
+
+    return adjList, i
+}
+
+func part1(lines []string) int {
+    count := 0
+    adjList, i := createAdjList(lines)
 
     for ; i < len(lines); i++ {
 	line := lines[i]
@@ -99,24 +105,8 @@ func topological_sort(graph map[int][]int) []int {
 }
 
 func part2(lines []string) int {
-    adjList := make(map[int][]int)
-
-    i := 0
     count := 0
-    for ; lines[i] != ""; i++ {
-	nums := strings.Split(lines[i], "|")	
-	num1, err := strconv.Atoi(nums[0])
-	check(err)
-	num2, err := strconv.Atoi(nums[1])
-	check(err)
-
-	if _, ok := adjList[num2]; !ok {
-	    adjList[num2] = []int{}
-	}
-	adjList[num2] = append(adjList[num2], num1)
-    }
-
-    // topoSort := topological_sort(adjList)
+    adjList, i := createAdjList(lines)
 
     for ; i < len(lines); i++ {
 	line := lines[i]
