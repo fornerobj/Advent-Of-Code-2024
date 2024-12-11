@@ -15,7 +15,7 @@ I will **not** be using any LLMs or other AI assisted tools to complete these ch
 8. Completed
 9. Completed
 10. Completed (this was way easier than day 9)
-11. TBD
+11. Completed part 1, failed part 2
 12. TBD
 13. TBD
 14. TBD
