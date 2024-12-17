@@ -1,6 +1,8 @@
 package main
 
 import (
+	"aoc2024/utils"
+	"container/heap"
 	"fmt"
 	"math"
 	"os"
@@ -46,11 +48,15 @@ func getFinish(grid [][]string) Pos {
     return Pos{-1,-1}
 }
 
-var dirs []Pos = []Pos {
-    {0,1},
-    {0,-1},
-    {1,0},
-    {-1,0},
+func printMap(grid [][]string, seats map[Robot]bool) {
+    for seat := range seats {
+	if seats[seat] {
+	    grid[seat.pos.R][seat.pos.C] = "O"
+	}
+    }
+    for _, row := range grid {
+	fmt.Println(row)
+    }
 }
 
 var dirToDirection map[int]Pos = map[int]Pos{
@@ -60,97 +66,106 @@ var dirToDirection map[int]Pos = map[int]Pos{
     3: {0, -1},
 }
 
-func findLowestNeighbor(visited map[Robot]bool, costs map[Robot]int) Robot {
-    minCost := math.MaxInt64
-    minRobot := Robot{Pos{-1,-1}, -1}
-    for robot, seen := range visited {
-	if !seen {
-	    if costs[robot] < minCost {
-		minRobot = robot
-		minCost = costs[robot]
-	    }
-	}
-    }
-    return minRobot
-}
-
-func listEmpty(visited map[Robot]bool) bool {
-    for _, seen := range visited {
-	if !seen {
-	    return false
-	}
-    } 
-    return true
-}
-
-func findPath(grid [][]string) int {
-    visited := make(map[Robot]bool)
-    costs := make(map[Robot]int)
-    for r, row := range grid {
-	for c, _ := range row {
-	    for d := 0; d < 4; d++ {
-		pos := Pos{r,c}
-		tempRobot := Robot{pos, d}
-		visited[tempRobot] = false
-		costs[tempRobot] = math.MaxInt64
-	    }
-	}
-    }
-
-    cur := Robot{getStart(grid), 1}
+func findPath(grid [][]string) (int, int) {
+    start := Robot{getStart(grid), 1}
     finish := getFinish(grid)
 
-    costs[cur] = 0
+    pq := &utils.PriorityQueue{}
 
-    for !listEmpty(visited) {
-	visited[cur] = true
-	if cur.Dir == -1 {
-	    break
-	}
-	if grid[cur.pos.R][cur.pos.C] == "#" {
-	    cur = findLowestNeighbor(visited, costs)
+    heap.Init(pq)
+    heap.Push(pq, &utils.Item{
+	Value: start,
+	Priority: 0,
+    })
+
+    prev := make(map[Robot][]Robot)
+    costs := make(map[Robot]int)
+    costs[start] = 0
+
+    for pq.Len() > 0 {
+	curItem := heap.Pop(pq).(*utils.Item)
+	cur := curItem.Value.(Robot)
+	curCost := curItem.Priority
+
+	if curCost > costs[cur] {
 	    continue
 	}
-	left := Robot{cur.pos, cur.Dir-1} 
-	if left.Dir == -1 {
-	    left.Dir = 3
-	}
-	if 1000+costs[cur] < costs[left] {
-	    costs[left] = 1000 + costs[cur]
-	}
 
-	right := Robot{cur.pos, (cur.Dir + 1) % 4}
-	if 1000 + costs[cur] < costs[right] {
-	    costs[right] = 1000 + costs[cur]
-	}
+	for i := -1; i <= 1; i++ {
+	    newDir := (cur.Dir + i + 4) % 4
+	    newPos := cur.pos
+	    moveCost := 0
+	    
+	    if i == 0 {
+		newPos = Pos{cur.pos.R + dirToDirection[newDir].R, cur.pos.C + dirToDirection[newDir].C}
+		moveCost = 1
+	    } else {
+		moveCost = 1000
+	    }
 
-	dPos := dirToDirection[cur.Dir]
-	forward := Robot{Pos{cur.pos.R+dPos.R, cur.pos.C+dPos.C}, cur.Dir}
-	if 1 + costs[cur] < costs[forward] {
-	    costs[forward] = 1+costs[cur]
-	}
+	    if grid[newPos.R][newPos.C] == "#" {
+		continue
+	    }
 
-	cur = findLowestNeighbor(visited, costs)
+	    next := Robot{newPos, newDir}
+	    newCost := curCost + moveCost
+
+	    if oldCost, exists := costs[next]; !exists || newCost < oldCost {
+		costs[next] = newCost
+		prev[next] = []Robot{cur}
+		heap.Push(pq, &utils.Item {
+		    Value: next, 
+		    Priority: newCost,
+		})
+	    }else if oldCost == newCost {
+		prev[next] = append(prev[next], cur)
+	    }
+	}
     }
-    
+
     minCost := math.MaxInt64
+    var finalRobot Robot
     for d := 0; d < 4; d++ {
 	r := Robot{finish, d}
-	if costs[r] < minCost {
-	    minCost = costs[r]
+	if cost, exists := costs[r]; exists && cost < minCost {
+	    minCost = cost
+	    finalRobot = r
 	}
     }
 
-    return minCost
+
+    stack := []Robot{finalRobot}
+    pathSet := map[Robot]bool {finalRobot:true}
+
+    for len(stack) > 0 {
+	temp := stack[len(stack)-1]
+	stack = stack[:len(stack)-1]
+	for _, other := range prev[temp] {
+	    if !pathSet[other] {
+		pathSet[other] = true
+		stack = append(stack, other)
+	    }
+	}
+    }
+
+    uniquePositions := make(map[Pos]bool)
+    for r := range pathSet {
+	if !uniquePositions[r.pos] {
+	    uniquePositions[r.pos] = true
+	}
+    }
+    
+    return minCost, len(uniquePositions)
 }
 
 func part1(grid [][]string) int {
-    minCost := findPath(grid)
+    minCost,_ := findPath(grid)
     return minCost
 }
 
-func part2() int {
-    return 1
+func part2(grid [][]string) int {
+    _,numSeats := findPath(grid)
+    return numSeats
 }
 
 func main() {
@@ -170,6 +185,6 @@ func main() {
     }
 
     fmt.Println("part 1:", part1(grid))
-    // fmt.Println("part 2:", part2(grid))
+    fmt.Println("part 2:", part2(grid))
 
 }
