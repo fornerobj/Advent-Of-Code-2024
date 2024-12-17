@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 )
@@ -59,80 +60,92 @@ var dirToDirection map[int]Pos = map[int]Pos{
     3: {0, -1},
 }
 
-// func findPath(grid [][]string, cur, goal Pos, seen map[Pos]bool) int {
-//     if cur == goal {
-// 	return 0
-//     }
-//     cost := 100000
-//     for _, dir := range dirs {
-// 	newPos := Pos{cur.R+dir.R, cur.C+dir.C}
-// 	if grid[newPos.R][newPos.C] != "#" && !seen[newPos] {
-// 	    seen[newPos] = true
-// 	    cost = min(cost, 1+findPath(grid, newPos, goal, seen)) 
-// 	}
-//     } 
-//     return cost
-// }
+func findLowestNeighbor(visited map[Robot]bool, costs map[Robot]int) Robot {
+    minCost := math.MaxInt64
+    minRobot := Robot{Pos{-1,-1}, -1}
+    for robot, seen := range visited {
+	if !seen {
+	    if costs[robot] < minCost {
+		minRobot = robot
+		minCost = costs[robot]
+	    }
+	}
+    }
+    return minRobot
+}
 
+func listEmpty(visited map[Robot]bool) bool {
+    for _, seen := range visited {
+	if !seen {
+	    return false
+	}
+    } 
+    return true
+}
 
-func findPath(grid [][]string, cur Robot, goal Pos, seen map[Robot]bool) (int, []Pos) {
-    if cur.pos == goal {
-        return 0, []Pos{goal}
+func findPath(grid [][]string) int {
+    visited := make(map[Robot]bool)
+    costs := make(map[Robot]int)
+    for r, row := range grid {
+	for c, _ := range row {
+	    for d := 0; d < 4; d++ {
+		pos := Pos{r,c}
+		tempRobot := Robot{pos, d}
+		visited[tempRobot] = false
+		costs[tempRobot] = math.MaxInt64
+	    }
+	}
+    }
+
+    cur := Robot{getStart(grid), 1}
+    finish := getFinish(grid)
+
+    costs[cur] = 0
+
+    for !listEmpty(visited) {
+	visited[cur] = true
+	if cur.Dir == -1 {
+	    break
+	}
+	if grid[cur.pos.R][cur.pos.C] == "#" {
+	    cur = findLowestNeighbor(visited, costs)
+	    continue
+	}
+	left := Robot{cur.pos, cur.Dir-1} 
+	if left.Dir == -1 {
+	    left.Dir = 3
+	}
+	if 1000+costs[cur] < costs[left] {
+	    costs[left] = 1000 + costs[cur]
+	}
+
+	right := Robot{cur.pos, (cur.Dir + 1) % 4}
+	if 1000 + costs[cur] < costs[right] {
+	    costs[right] = 1000 + costs[cur]
+	}
+
+	dPos := dirToDirection[cur.Dir]
+	forward := Robot{Pos{cur.pos.R+dPos.R, cur.pos.C+dPos.C}, cur.Dir}
+	if 1 + costs[cur] < costs[forward] {
+	    costs[forward] = 1+costs[cur]
+	}
+
+	cur = findLowestNeighbor(visited, costs)
     }
     
-    cost := 100000
-    var bestPath []Pos
-
-    newPos := Pos{cur.pos.R + dirToDirection[cur.Dir].R, cur.pos.C + dirToDirection[cur.Dir].C}
-    forward := Robot{newPos, cur.Dir}
-
-    if grid[newPos.R][newPos.C] != "#" && !seen[forward] {
-	seen[forward] = true
-	subCost, subPath := findPath(grid, forward, goal, seen)
-	totalCost := 1 + subCost
-	if totalCost < cost {
-	    cost = totalCost
-	    bestPath = append([]Pos{newPos}, subPath...)
+    minCost := math.MaxInt64
+    for d := 0; d < 4; d++ {
+	r := Robot{finish, d}
+	if costs[r] < minCost {
+	    minCost = costs[r]
 	}
-	seen[forward] = false
-    }
-    
-    rotatedC := Robot{cur.pos, (cur.Dir + 1) % 4}
-    if !seen[rotatedC] {
-	seen[rotatedC] = true
-	subCost, subPath := findPath(grid, rotatedC, goal, seen)
-	totalCost := 1000+subCost
-	if totalCost < cost {
-	    cost = totalCost
-	    bestPath = append([]Pos{cur.pos}, subPath...)
-	}
-	seen[rotatedC] = false
     }
 
-    rotateCC := cur.Dir - 1
-    if rotateCC == -1 {
-	rotateCC = 3
-    }
-    rotatedCC := Robot{cur.pos, rotateCC}
-    if !seen[rotatedCC] {
-	seen[rotatedCC] = true
-	subCost, subPath := findPath(grid, rotatedCC, goal, seen)
-	totalCost := 1000+subCost
-	if totalCost < cost {
-	    cost = totalCost
-	    bestPath = append([]Pos{cur.pos}, subPath...)
-	}
-	seen[rotatedCC] = false
-    }
-
-    return cost, bestPath
+    return minCost
 }
 
 func part1(grid [][]string) int {
-    start := getStart(grid) 
-    goal := getFinish(grid)
-    minCost, bestPath := findPath(grid, Robot{start, 0}, goal, make(map[Robot]bool))
-    fmt.Println(bestPath)
+    minCost := findPath(grid)
     return minCost
 }
 
