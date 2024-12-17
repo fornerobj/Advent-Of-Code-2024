@@ -19,9 +19,9 @@ I will **not** be using any LLMs or other AI assisted tools to complete these ch
 12. Completed part 1 only
 13. Completed
 14. Completed
-15. Completed part 1 only
-16. Completed part 1 only
-17. Completed part 1 only
+15. Completed, used idea from Neil Thistlethwaite for part 2, but implemented in Go
+16. Completed
+17. Completed part 1 only, as I am not that guy
 18. TBD
 19. TBD
 20. TBD
