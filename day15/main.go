@@ -58,6 +58,23 @@ func expandMap(grid [][]string) [][]string {
     return newMap
 }
 
+func copyGrid(grid [][]string) [][]string {
+    newGrid := make([][]string, len(grid))
+
+    for i := 0; i < len(grid); i++ {
+	line := grid[i]
+	newLine := make([]string, len(line))
+
+	for j := 0; j < len(line); j++ {
+	    newLine[j] = line[j]
+	}
+
+	newGrid[i] = newLine
+    }
+
+    return newGrid
+}
+
 func findRobot(grid [][]string) Pos {
     height := len(grid)
     width := len(grid[0])
@@ -104,43 +121,6 @@ func moveRobot(grid [][]string, instruction string) [][]string {
     return grid
 }
 
-func moveRobotBig(grid [][]string, instruction string) [][]string {
-    dpos := arrowToMap[instruction]
-    robot := findRobot(grid)
-    pos := robot
-    if grid[robot.R + dpos.R][robot.C + dpos.C] == "#" {
-	return grid
-    }
-    if grid[robot.R + dpos.R][robot.C + dpos.C] == "." {
-	grid[robot.R+dpos.R][robot.C+dpos.C] = "@"
-	grid[robot.R][robot.C] = "."
-	return grid
-    }
-    for ;; {
-	pos = Pos{pos.R+dpos.R, pos.C + dpos.C}
-	if grid[pos.R][pos.C] == "#" {
-	    break
-	}
-	if grid[pos.R][pos.C] == "." {
-	    for i:=0;;i++ {
-		if grid[pos.R][pos.C] == "@" {
-		    break
-		}
-		if i%2!=0 {
-		    grid[pos.R][pos.C] = "]"
-		}else {
-		    grid[pos.R][pos.C] = "["
-		}
-		pos = Pos{pos.R-dpos.R, pos.C-dpos.C}
-	    }
-	    grid[robot.R+dpos.R][robot.C+dpos.C] = "@"
-	    grid[robot.R][robot.C] = "."
-	    break
-	}
-    }
-    return grid
-}
-
 func part1(grid [][]string, instructions []string) int {
     count := 0
     for _, ins := range instructions {
@@ -157,18 +137,69 @@ func part1(grid [][]string, instructions []string) int {
     return count
 }
 
+func inSlice(slice []Pos, pos Pos) bool {
+    for i:=0; i < len(slice); i++ {
+	if slice[i] == pos {
+	    return true
+	}
+    }
+    return false
+}
+
 func part2(grid [][]string, instructions []string) int {
     count := 0
-    printMap(grid)
-    for _, ins := range instructions {
-	grid = moveRobotBig(grid, ins)
-	printMap(grid)
-    }
+    cPos := findRobot(grid)
+    for _, instruction := range instructions {
+	dr, dc := arrowToMap[instruction].R, arrowToMap[instruction].C
+	positionsToMove := make([]Pos, 0)
+	positionsToMove = append(positionsToMove, cPos)
+	i := 0
+	cantMove := false
 
-    for i, line := range grid {
-	for j, c := range line {
-	    if c == "[" {
-		count += 100*i + j
+	for i < len(positionsToMove) {
+	    r, c := positionsToMove[i].R, positionsToMove[i].C
+	    nr, nc := r+dr, c+dc
+	    if grid[nr][nc] == "[" || grid[nr][nc] == "]" {
+		if !inSlice(positionsToMove, Pos{nr,nc}) {
+		    positionsToMove = append(positionsToMove, Pos{nr, nc})
+		}
+		if grid[nr][nc] == "[" {
+		    if !inSlice(positionsToMove, Pos{nr,nc+1}) {
+			positionsToMove = append(positionsToMove, Pos{nr, nc+1})
+		    }
+		}
+		if grid[nr][nc] == "]" {
+		    if !inSlice(positionsToMove, Pos{nr,nc-1}) {
+			positionsToMove = append(positionsToMove, Pos{nr, nc-1})
+		    }
+		}
+	    }else if grid[nr][nc] == "#" {
+		cantMove = true
+		break
+	    }
+	    i++
+	}
+	if cantMove {
+	    continue
+	}
+	newGrid := copyGrid(grid)
+
+	for _, pos := range positionsToMove {
+	    newGrid[pos.R][pos.C] = "."
+	}
+	for _, pos := range positionsToMove {
+	    newGrid[pos.R+dr][pos.C+dc] = grid[pos.R][pos.C]
+	}
+	grid = newGrid
+
+	cPos.R += dr
+	cPos.C += dc
+	 
+    }
+    for r, row := range grid {
+	for c, col := range row {
+	    if col == "[" {
+		count += 100*r + c
 	    }
 	}
     }
