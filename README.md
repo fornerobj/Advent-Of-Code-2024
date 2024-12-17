@@ -16,12 +16,12 @@ I will **not** be using any LLMs or other AI assisted tools to complete these ch
 9. Completed
 10. Completed (this was way easier than day 9)
 11. Completed. Part 2 took ~2.5 hours
-12. TBD
-13. TBD
-14. TBD
-15. TBD
-16. TBD
-17. TBD
+12. Completed part 1 only
+13. Completed
+14. Completed
+15. Completed part 1 only
+16. Completed part 1 only
+17. Completed part 1 only
 18. TBD
 19. TBD
 20. TBD
