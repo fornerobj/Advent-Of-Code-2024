@@ -12,35 +12,7 @@ func check (e error) {
     }
 }
 
-var memo map[string]bool = make(map[string]bool)
 var memoNums map[string]int = make(map[string]int)
-
-func isGood(towels []string, target string) bool {
-    if good, exists := memo[target]; exists {
-	return good
-    }
-    if len(target) == 0 {
-	memo[target] = true
-	return true
-    }
-
-    isPossible := false
-    for _, t := range towels {
-	n := len(t)
-	if n > len(target) {
-	    continue
-	}
-	if t == target[:n] {
-	    isPossible = isGood(towels, target[n:]) 
-	}
-	if isPossible {
-	    break
-	}
-    }
-
-    memo[target] = isPossible
-    return isPossible
-}
 
 func goodCombos(towels []string, target string) int {
     if numWays, exists := memoNums[target]; exists {
@@ -69,7 +41,7 @@ func goodCombos(towels []string, target string) int {
 func part1(towels, targets []string) int{
     count := 0 
     for _, t := range targets {
-	if isGood(towels, t) {
+	if goodCombos(towels, t) > 0 {
 	    count ++
 	}
     }
