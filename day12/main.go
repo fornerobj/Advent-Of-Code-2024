@@ -16,62 +16,200 @@ type Pos struct {
     R int
     C int
 }
-
-func getAreaAndPerimeter(pos Pos, plant string,  _map [][]string, seen map[Pos]bool) (int, int) {
-    w := len(_map[0])
-    h := len(_map)
-
-    if pos.R < 0 || pos.R >= h || pos.C < 0 || pos.C >= w {
-	return 0, 1
-    }
-
-    if _map[pos.R][pos.C] != plant {
-	return 0, 1
-    }
-
-    if seen[pos] {
-	return 0, 0
-    }
-
-    seen[pos] = true
-
-    directions := []Pos{
-	{1,0},
-	{-1,0},
-	{0,1},
-	{0,-1},
-    }
-
-    res := 0
-    res2 := 0
-    
-    for _, p := range directions {
-	dr, dc := p.R, p.C
-	a, p := getAreaAndPerimeter(Pos{pos.R+dr,pos.C+dc}, plant, _map, seen)
-	res += a
-	res2 += p
-    }
-
-    return 1 + res, res2
+var directions []Pos = []Pos{
+    {-1,0}, //up
+    {0,1}, //right
+    {1,0}, //down
+    {0,-1}, //left
 }
 
-func part1(_map [][]string) int {
+func dfs(pos Pos, _map [][]string, seen map[Pos]bool) []Pos {
+    stack := []Pos{pos}
+    w, h := len(_map[0]), len(_map)
+    localSeen := make(map[Pos]bool)
+    localSeen[pos] = true
+    seen[pos] = true
+
+    for len(stack) > 0 {
+	cur := stack[len(stack)-1]
+	stack = stack[:len(stack)-1]
+	cr, cc := cur.R, cur.C
+	curLetter := _map[cr][cc]
+	for _, dir := range directions {
+	    dr, dc := dir.R, dir.C 
+	    nr, nc := cr+dr, cc+dc
+	    if nr < 0 || nr >= h || nc < 0 || nc >= w {
+		continue
+	    }
+	    if _map[nr][nc] != curLetter {
+		continue
+	    }
+	    if seen[Pos{nr,nc}] {
+		continue
+	    }
+	    seen[Pos{nr,nc}] = true
+	    localSeen[Pos{nr,nc}] = true
+	    stack = append(stack, Pos{nr,nc})
+	}
+    }
+    group := make([]Pos, len(localSeen))
+    i := 0
+    for foundPos := range localSeen {
+	group[i] = foundPos
+	i++	
+    }
+
+    return group
+}
+
+func getPerimeter(group []Pos, _map [][]string) int {
+    letter := _map[group[0].R][group[0].C]
+    w, h := len(_map[0]), len(_map)
+    perimeter := 0
+    for _, cur := range group {
+	cr, cc := cur.R, cur.C
+	for _, dir := range directions {
+	    dr, dc := dir.R, dir.C
+	    nr, nc := cr+dr, cc+dc
+	    if nr < 0 || nr >= h || nc < 0 || nc >=w {
+		perimeter += 1
+		continue
+	    }
+	    if _map[nr][nc] != letter {
+		perimeter += 1
+	    }
+	}
+    } 
+    return perimeter
+}
+
+func getGroups(_map [][]string) [][]Pos {
     seen := make(map[Pos]bool)
-    count := 0
+    groups := make([][]Pos, 0)
 
     for r, row := range _map {
-	for c, plant := range row {
-	   if !seen[Pos{r, c}] {
-		area, perimeter := getAreaAndPerimeter(Pos{r,c}, plant, _map, seen)
-		count += area*perimeter
+	for c, _ := range row {
+	    if !seen[Pos{r, c}] {
+		g := dfs(Pos{r,c}, _map, seen)
+		groups = append(groups, g)
 	    }  
 	}
     }
+    return groups
+}
+
+func part1(_map [][]string) int {
+    count := 0
+    groups := getGroups(_map)
+
+    for _, group := range groups {
+	area := len(group)
+	perimeter := getPerimeter(group, _map)
+	count += area*perimeter
+    }
+    return count
+}
+
+type Edge struct {
+    pos Pos
+    //0 up, 1 right, 2 down, 3 left
+    orientation int
+}
+
+func getEdges (_map [][]string, pos Pos) []Edge{
+    w, h := len(_map[0]), len(_map)
+    letter := _map[pos.R][pos.C]
+    edges := make([]Edge, 0)
+    for i, dir := range directions {
+	nr, nc := pos.R + dir.R, pos.C + dir.C
+	if nr < 0 || nr >= h || nc < 0 || nc >= w {
+	    edges = append(edges, Edge{pos, i})
+	    continue
+	}
+	if _map[nr][nc] != letter {
+	    edges = append(edges, Edge{pos, i})
+	}
+    }
+
+    return edges
+}
+
+func getSides(_map [][]string, group []Pos) int {
+    edges := make(map[Edge]bool)
+
+    for _, pos := range group {
+	newEdges := getEdges(_map, pos)
+	for _, e := range newEdges {
+	    edges[e] = true
+	}
+    }
+
+    for e := range edges {
+	if !edges[e] {
+	    continue
+	}
+	if e.orientation == 0 || e.orientation == 2 {
+	    nc := e.pos.C
+	    for ;; {
+		nc += 1
+		newEdge := Edge{Pos{e.pos.R, nc}, e.orientation}
+		if _, exists := edges[newEdge]; !exists {
+		    break
+		} else {
+		    edges[newEdge] = false
+		}
+	    }
+	    nc = e.pos.C
+	    for ;; {
+		nc -= 1
+		newEdge := Edge{Pos{e.pos.R, nc}, e.orientation}
+		if _, exists := edges[newEdge]; !exists {
+		    break
+		} else {
+		    edges[newEdge] = false
+		}
+	    }
+	} else {
+	    nr := e.pos.R
+	    for ;; {
+		nr += 1
+		newEdge := Edge{Pos{nr, e.pos.C}, e.orientation}
+		if _, exists := edges[newEdge]; !exists {
+		    break
+		} else {
+		    edges[newEdge] = false
+		}
+	    }
+	    nr = e.pos.R
+	    for ;; {
+		nr -= 1
+		newEdge := Edge{Pos{nr, e.pos.C}, e.orientation}
+		if _, exists := edges[newEdge]; !exists {
+		    break
+		} else {
+		    edges[newEdge] = false
+		}
+	    }
+
+	}
+    }
+
+    count := 0
+    for e := range edges {
+	if edges[e] {
+	    count ++
+	}
+    }
+
     return count
 }
 
 func part2(_map [][]string) int {
     count := 0
+    groups := getGroups(_map)
+    for _, g := range groups {
+	count += len(g)*getSides(_map, g)
+    }
     return count
 }
 
