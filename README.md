@@ -17,6 +17,7 @@ I will **not** be using any LLMs or other AI assisted tools to complete these ch
 10. Completed (this was way easier than day 9)
 11. Completed. Part 2 took ~2.5 hours
 12. Completed part 1 only, failed to complete part 2
+    -Went back and finished part 2 on 12/30/24
 13. Completed
 14. Completed
 15. Completed, used idea from Neil Thistlethwaite for part 2, but implemented in Go
@@ -28,5 +29,5 @@ I will **not** be using any LLMs or other AI assisted tools to complete these ch
 21. Failed to Complete
 22. Completed. Hashed slices by converting to strings first. Interesting!
 23. Completed using bron–kerbosch algorithm
-24. TBD
-25. TBD
+24. Completed part 1
+25. Completed part 1
