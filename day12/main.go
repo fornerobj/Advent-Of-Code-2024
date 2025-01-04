@@ -190,7 +190,6 @@ func getSides(_map [][]string, group []Pos) int {
 		    edges[newEdge] = false
 		}
 	    }
-
 	}
     }
 
